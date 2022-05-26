@@ -1,0 +1,70 @@
+---
+- name: Remove deprecated nfs-client-provisioner
+  community.kubernetes.helm:
+    name: "nfs-client"
+    namespace: "nfs-client"
+    kubeconfig: "{{ KUBECONFIG }}"
+    state: absent
+  tags:
+    - install
+    - uninstall
+    - update
+
+- name: Remove deprecated efs-provisioner
+  community.kubernetes.helm:
+    name: "efs-provisioner"
+    namespace: "efs-provisioner"
+    kubeconfig: "{{ KUBECONFIG }}"
+    state: absent
+  tags:
+    - install
+    - uninstall
+    - update
+
+- name: Remove deprecated efs-provisioner namespace
+  community.kubernetes.k8s:
+    api_version: v1
+    kind: Namespace
+    name: "efs-provisioner"
+    state: absent
+    kubeconfig: "{{ KUBECONFIG }}"
+  tags:
+    - install
+    - uninstall
+    - update
+
+- name: Deploy nfs-subdir-external-provisioner
+  community.kubernetes.helm:
+    name: "{{ NFS_CLIENT_NAME }}"
+    namespace: "{{ NFS_CLIENT_NAMESPACE }}"
+    chart_repo_url: "{{ NFS_CLIENT_CHART_URL }}"
+    chart_ref: "{{ NFS_CLIENT_CHART_NAME }}"
+    chart_version: "{{ NFS_CLIENT_CHART_VERSION }}"
+    values: "{{ NFS_CLIENT_CONFIG }}"
+    kubeconfig: "{{ KUBECONFIG }}"
+    create_namespace: true
+    wait: true
+  tags:
+    - install
+    - update
+
+- name: Remove nfs-subdir-external-provisioner
+  community.kubernetes.helm:
+    name: "{{ NFS_CLIENT_NAME }}"
+    namespace: "{{ NFS_CLIENT_NAMESPACE }}"
+    kubeconfig: "{{ KUBECONFIG }}"
+    wait: true
+    state: absent
+  tags:
+    - uninstall
+
+#- name: Remove {{ NFS_CLIENT_NAMESPACE }} namespace
+#  community.kubernetes.k8s:
+#    api_version: v1
+#    kind: Namespace
+#    name: "{{ NFS_CLIENT_NAMESPACE }}"
+#    wait: true
+#    state: absent
+#    kubeconfig: "{{ KUBECONFIG }}"
+#  tags:
+#    - uninstall
